@@ -28,7 +28,7 @@
 int main(int argc, char *argv[])
 {
 	FILE *fp;
-	char t;
+	unsigned char t;
 	int i;
 
 	if (argc < 2) {
@@ -47,7 +47,7 @@ int main(int argc, char *argv[])
 			return errno;
 		}
 
-		while ((t = fgetc(fp)) != EOF) {
+		for (t = fgetc(fp); !feof(fp); t = fgetc(fp)) {
 			printf("0x%02x\n", t);
 		}
 	}
