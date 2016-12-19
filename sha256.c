@@ -28,29 +28,28 @@
 int main(int argc, char *argv[])
 {
 	FILE *fp;
-
 	char t;
+	int i;
 
 	if (argc < 2) {
-		printf("Usage: %s [file]\n", argv[0]);
+		printf("Usage: %s [file] ...\n", argv[0]);
 		return 0;
 	}
 
-	fp = fopen(argv[1], "rb");
+	for (i = 1; i < argc; i++) {
+		fp = fopen(argv[i], "rb");
 
-	if (!fp) {
-		fprintf(
-			stderr,
-			"Unable to open %s: %s\n",
-			argv[1],
-			strerror(errno)
-		);
+		if (!fp) {
+			fprintf(stderr,
+				"Unable to open %s: %s\n",
+				argv[i], strerror(errno));
 
-		return errno;
-	}
+			return errno;
+		}
 
-	while ((t = fgetc(fp)) != EOF) {
-		printf("0x%02x\n", t);
+		while ((t = fgetc(fp)) != EOF) {
+			printf("0x%02x\n", t);
+		}
 	}
 
 	return 0;
