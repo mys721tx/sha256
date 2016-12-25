@@ -25,11 +25,20 @@
 #include <string.h>
 #include <errno.h>
 
+typedef struct block {
+	unsigned char data[64];
+	struct block *next;
+} Block;
+
 int main(int argc, char *argv[])
 {
 	FILE *fp;
 	unsigned char t;
 	int i;
+	int j;
+	long l;
+	unsigned char g;
+	unsigned char s;
 
 	if (argc < 2) {
 		printf("Usage: %s [file] ...\n", argv[0]);
@@ -37,6 +46,12 @@ int main(int argc, char *argv[])
 	}
 
 	for (i = 1; i < argc; i++) {
+
+		Block *head = malloc(sizeof(Block));
+		head->next = NULL;
+
+		Block *current = head;
+
 		fp = fopen(argv[i], "rb");
 
 		if (!fp) {
@@ -47,9 +62,57 @@ int main(int argc, char *argv[])
 			return errno;
 		}
 
+		j = 0;
+		l = 0;
+
 		for (t = fgetc(fp); !feof(fp); t = fgetc(fp)) {
-			printf("0x%02x\n", t);
+			current->data[j] = t;
+
+			if (j < 64) {
+				j++;
+				l += 8;	// count the number of bits
+			} else {
+				j = 0;
+
+				current->next = malloc(sizeof(Block));
+				current = current->next;
+				current->next = NULL;
+			}
 		}
+
+		current->data[j] = 0x80;	// mark the end of message.
+
+		if (j > 56) {
+			for (j += 1; j < 64; j++) {
+				current->data[j] = 0;
+			}
+
+			current->next = malloc(sizeof(Block));
+			current = current->next;
+			current->next = NULL;
+		}
+
+		for (j = 0; j < 56; j++) {
+			current->data[j] = 0;
+		}
+
+		for (j = 0; j < 8; j++) {
+			current->data[j + 56] = (l >> ((8 - j - 1) * 8)) & 0xff;
+		}
+
+		current = head;
+
+		while (current->next != NULL) {
+			for (j = 0; j < 64; j++) {
+				printf("%02x\n", current->data[j]);
+			}
+			current = current->next;
+		}
+
+		for (j = 0; j < 64; j++) {
+			printf("%02x\n", current->data[j]);
+		}
+
 	}
 
 	return 0;
