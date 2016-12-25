@@ -68,7 +68,7 @@ int main(int argc, char *argv[])
 		for (t = fgetc(fp); !feof(fp); t = fgetc(fp)) {
 			current->data[j] = t;
 
-			if (j < 64) {
+			if (j < 63) {
 				j++;
 				l += 8;	// count the number of bits
 			} else {
