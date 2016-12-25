@@ -90,10 +90,14 @@ int main(int argc, char *argv[])
 			current->next = malloc(sizeof(Block));
 			current = current->next;
 			current->next = NULL;
-		}
 
-		for (j = 0; j < 56; j++) {
-			current->data[j] = 0;
+			for (j = 0; j < 56; j++) {
+				current->data[j] = 0;
+			}
+		} else {
+			for (j += 1; j < 56; j++) {
+				current->data[j] = 0;
+			}
 		}
 
 		for (j = 0; j < 8; j++) {
