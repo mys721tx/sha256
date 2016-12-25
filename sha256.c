@@ -82,7 +82,7 @@ int main(int argc, char *argv[])
 
 		current->data[j] = 0x80;	// mark the end of message.
 
-		if (j > 56) {
+		if (j > 55) {
 			for (j += 1; j < 64; j++) {
 				current->data[j] = 0;
 			}
