@@ -23,22 +23,31 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
 #include <errno.h>
 
 typedef struct block {
-	unsigned char data[64];
+	uint8_t data[64];
 	struct block *next;
 } Block;
+
+// merge four uint8_t variables to a uint32_t variable in big-endian order.
+uint32_t merge_uint8_t(uint8_t *p) {
+	uint8_t v0 = *p;
+	uint8_t v1 = *(p + 1);
+	uint8_t v2 = *(p + 2);
+	uint8_t v3 = *(p + 3);
+
+	return v3 | v2 << 8 | v1 << 16 | v0 << 24;
+}
 
 int main(int argc, char *argv[])
 {
 	FILE *fp;
-	unsigned char t;
-	int i;
-	int j;
-	long l;
-	unsigned char g;
-	unsigned char s;
+	uint8_t t;
+	uint64_t i;
+	uint64_t j;
+	uint64_t l;
 
 	if (argc < 2) {
 		printf("Usage: %s [file] ...\n", argv[0]);
@@ -107,14 +116,14 @@ int main(int argc, char *argv[])
 		current = head;
 
 		while (current->next != NULL) {
-			for (j = 0; j < 64; j++) {
-				printf("%02x\n", current->data[j]);
+			for (j = 0; j < 64; j += 4) {
+				printf("%08x\n", merge_uint8_t(&current->data[j]));
 			}
 			current = current->next;
 		}
 
-		for (j = 0; j < 64; j++) {
-			printf("%02x\n", current->data[j]);
+		for (j = 0; j < 64; j += 4) {
+			printf("%08x\n", merge_uint8_t(&current->data[j]));
 		}
 
 	}
