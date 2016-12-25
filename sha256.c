@@ -32,7 +32,8 @@ typedef struct block {
 } Block;
 
 // merge four uint8_t variables to a uint32_t variable in big-endian order.
-uint32_t merge_uint8_t(uint8_t *p) {
+uint32_t merge_uint8_t(uint8_t *p)
+{
 	uint8_t v0 = *p;
 	uint8_t v1 = *(p + 1);
 	uint8_t v2 = *(p + 2);
@@ -115,17 +116,17 @@ int main(int argc, char *argv[])
 
 		current = head;
 
-		while (current->next != NULL) {
+		for (;;) {
 			for (j = 0; j < 64; j += 4) {
 				printf("%08x\n", merge_uint8_t(&current->data[j]));
 			}
-			current = current->next;
-		}
 
-		for (j = 0; j < 64; j += 4) {
-			printf("%08x\n", merge_uint8_t(&current->data[j]));
+			if (current->next == NULL) {
+				break;
+			} else {
+				current = current->next;
+			}
 		}
-
 	}
 
 	return 0;
