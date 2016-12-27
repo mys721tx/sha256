@@ -42,13 +42,57 @@ uint32_t merge_uint8_t(uint8_t *p)
 	return v3 | v2 << 8 | v1 << 16 | v0 << 24;
 }
 
+void reader(FILE *fp, Block *b)
+{
+	uint8_t t;
+	uint64_t i = 0;
+	uint64_t l = 0;
+
+	for (t = fgetc(fp); !feof(fp); t = fgetc(fp)) {
+		b->data[i] = t;
+
+		if (i < 63) {
+			i++;
+			l += 8;	// count the number of bits
+		} else {
+			i = 0;
+
+			b->next = malloc(sizeof(Block));
+			b = b->next;
+			b->next = NULL;
+		}
+	}
+
+	b->data[i] = 0x80;	// mark the end of message.
+
+	if (i > 55) {
+		for (i += 1; i < 64; i++) {
+			b->data[i] = 0;
+		}
+
+		b->next = malloc(sizeof(Block));
+		b = b->next;
+		b->next = NULL;
+
+		for (i = 0; i < 56; i++) {
+			b->data[i] = 0;
+		}
+	} else {
+		for (i += 1; i < 56; i++) {
+			b->data[i] = 0;
+		}
+	}
+
+	for (i = 0; i < 8; i++) {
+		b->data[i + 56] = (l >> ((8 - i - 1) * 8)) & 0xff;
+	}
+}
+
 int main(int argc, char *argv[])
 {
 	FILE *fp;
-	uint8_t t;
 	uint64_t i;
 	uint64_t j;
-	uint64_t l;
 
 	if (argc < 2) {
 		printf("Usage: %s [file] ...\n", argv[0]);
@@ -72,47 +116,7 @@ int main(int argc, char *argv[])
 			return errno;
 		}
 
-		j = 0;
-		l = 0;
-
-		for (t = fgetc(fp); !feof(fp); t = fgetc(fp)) {
-			current->data[j] = t;
-
-			if (j < 63) {
-				j++;
-				l += 8;	// count the number of bits
-			} else {
-				j = 0;
-
-				current->next = malloc(sizeof(Block));
-				current = current->next;
-				current->next = NULL;
-			}
-		}
-
-		current->data[j] = 0x80;	// mark the end of message.
-
-		if (j > 55) {
-			for (j += 1; j < 64; j++) {
-				current->data[j] = 0;
-			}
-
-			current->next = malloc(sizeof(Block));
-			current = current->next;
-			current->next = NULL;
-
-			for (j = 0; j < 56; j++) {
-				current->data[j] = 0;
-			}
-		} else {
-			for (j += 1; j < 56; j++) {
-				current->data[j] = 0;
-			}
-		}
-
-		for (j = 0; j < 8; j++) {
-			current->data[j + 56] = (l >> ((8 - j - 1) * 8)) & 0xff;
-		}
+		reader(fp, head);
 
 		current = head;
 
