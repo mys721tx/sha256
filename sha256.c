@@ -45,10 +45,6 @@ void reader(FILE *fp, Block *b)
 
 		l += 8;	// count the number of bits
 
-		if (j == 3) {
-			b->data[i] = 0;
-		}
-
 		b->data[i] |= t << j * 8;
 
 		if (i > 15) {
@@ -56,6 +52,7 @@ void reader(FILE *fp, Block *b)
 			b->next = malloc(sizeof(Block));
 			b = b->next;
 			b->next = NULL;
+			memset(b->data, 0, sizeof(b->data));
 		}
 
 		if (j == 0) {
@@ -66,29 +63,13 @@ void reader(FILE *fp, Block *b)
 		}
 	}
 
-	if (j == 3) {
-		b->data[i] = 0x80 << j * 8;	// mark the end of message.
-	} else {
-		b->data[i] |= 0x80 << j * 8;	// mark the end of message.
-	}
+	b->data[i] |= 0x80 << j * 8;	// mark the end of message.
 
 	if (i > 13) {
-		for (i += 1; i < 16; i++) {
-			b->data[i] = 0;
-		}
-
 		b->next = malloc(sizeof(Block));
 		b = b->next;
 		b->next = NULL;
-
-		for (i = 0; i < 14; i++) {
-			b->data[i] = 0;
-		}
-		
-	} else {
-		for (i += 1; i < 14; i++) {
-			b->data[i] = 0;
-		}
+		memset(b->data, 0, sizeof(b->data));
 	}
 
 	b->data[14] = (uint32_t) (l >> 32);
@@ -111,6 +92,7 @@ int main(int argc, char *argv[])
 
 		Block *head = malloc(sizeof(Block));
 		head->next = NULL;
+		memset(head->data, 0, sizeof(head->data));
 
 		Block *current = head;
 
