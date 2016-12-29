@@ -27,46 +27,53 @@
 #include <errno.h>
 
 typedef struct block {
-	uint8_t data[64];
+	uint32_t data[16];
 	struct block *next;
 } Block;
 
-// merge four uint8_t variables to a uint32_t variable in big-endian order.
-uint32_t merge_uint8_t(uint8_t *p)
-{
-	uint8_t v0 = *p;
-	uint8_t v1 = *(p + 1);
-	uint8_t v2 = *(p + 2);
-	uint8_t v3 = *(p + 3);
-
-	return v3 | v2 << 8 | v1 << 16 | v0 << 24;
-}
+// reader() takes a file pointer and a head pointer to a singly linked list.
+// reader() extends the singly linked list in place.
 
 void reader(FILE *fp, Block *b)
 {
-	uint8_t t;
+	uint32_t t;
 	uint64_t i = 0;
+	uint64_t j = 3;
 	uint64_t l = 0;
 
 	for (t = fgetc(fp); !feof(fp); t = fgetc(fp)) {
-		b->data[i] = t;
 
-		if (i < 63) {
-			i++;
-			l += 8;	// count the number of bits
-		} else {
+		l += 8;	// count the number of bits
+
+		if (j == 3) {
+			b->data[i] = 0;
+		}
+
+		b->data[i] |= t << j * 8;
+
+		if (i > 15) {
 			i = 0;
-
 			b->next = malloc(sizeof(Block));
 			b = b->next;
 			b->next = NULL;
 		}
+
+		if (j == 0) {
+			i++;
+			j = 3;
+		} else {
+			j--;
+		}
 	}
 
-	b->data[i] = 0x80;	// mark the end of message.
+	if (j == 3) {
+		b->data[i] = 0x80 << j * 8;	// mark the end of message.
+	} else {
+		b->data[i] |= 0x80 << j * 8;	// mark the end of message.
+	}
 
-	if (i > 55) {
-		for (i += 1; i < 64; i++) {
+	if (i > 13) {
+		for (i += 1; i < 16; i++) {
 			b->data[i] = 0;
 		}
 
@@ -74,18 +81,19 @@ void reader(FILE *fp, Block *b)
 		b = b->next;
 		b->next = NULL;
 
-		for (i = 0; i < 56; i++) {
+		for (i = 0; i < 14; i++) {
 			b->data[i] = 0;
 		}
+		
 	} else {
-		for (i += 1; i < 56; i++) {
+		for (i += 1; i < 14; i++) {
 			b->data[i] = 0;
 		}
 	}
 
-	for (i = 0; i < 8; i++) {
-		b->data[i + 56] = (l >> ((8 - i - 1) * 8)) & 0xff;
-	}
+	b->data[14] = (uint32_t) (l >> 32);
+
+	b->data[15] = (uint32_t) (l & 0xffffffff);
 }
 
 int main(int argc, char *argv[])
@@ -121,8 +129,8 @@ int main(int argc, char *argv[])
 		current = head;
 
 		for (;;) {
-			for (j = 0; j < 64; j += 4) {
-				printf("%08x\n", merge_uint8_t(&current->data[j]));
+			for (j = 0; j < 16; j ++) {
+				printf("%08x\n", current->data[j]);
 			}
 
 			if (current->next == NULL) {
