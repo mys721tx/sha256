@@ -125,19 +125,19 @@ void reader(FILE *fp, Block *b)
 
 		b->data[i] |= t << j * 8;
 
+		if (j == 0) {
+			i++;
+			j = 3;
+		} else {
+			j--;
+		}
+
 		if (i > 15) {
 			i = 0;
 			b->next = malloc(sizeof(Block));
 			b = b->next;
 			b->next = NULL;
 			memset(b->data, 0, sizeof(b->data));
-		}
-
-		if (j == 0) {
-			i++;
-			j = 3;
-		} else {
-			j--;
 		}
 	}
 
@@ -313,6 +313,8 @@ int main(int argc, char *argv[])
 		}
 
 		printf("\t%s\n", argv[i]);
+
+		free(hv);
 	}
 
 	return 0;
