@@ -134,20 +134,18 @@ void reader(FILE *fp, Block *b)
 
 		if (i > 15) {
 			i = 0;
-			b->next = malloc(sizeof(Block));
+			b->next = calloc(1, sizeof(Block));
 			b = b->next;
 			b->next = NULL;
-			memset(b->data, 0, sizeof(b->data));
 		}
 	}
 
 	b->data[i] |= 0x80 << j * 8;	// mark the end of message.
 
 	if (i > 13) {
-		b->next = malloc(sizeof(Block));
+		b->next = calloc(1, sizeof(Block));
 		b = b->next;
 		b->next = NULL;
-		memset(b->data, 0, sizeof(b->data));
 	}
 
 	b->data[14] = (uint32_t) (l >> 32);
@@ -290,9 +288,8 @@ int main(int argc, char *argv[])
 
 	for (i = 1; i < argc; i++) {
 
-		Block *head = malloc(sizeof(Block));
+		Block *head = calloc(1, sizeof(Block));
 		head->next = NULL;
-		memset(head->data, 0, sizeof(head->data));
 
 		fp = fopen(argv[i], "rb");
 
