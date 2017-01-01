@@ -109,44 +109,56 @@ const uint32_t k[64] = {
 	0xc67178f2
 };
 
-// reader() takes a file pointer and a head pointer to a singly linked list.
-// reader() extends the singly linked list in place.
-
-void reader(FILE *fp, Block *b)
+uint32_t flip_uint32_t(uint32_t x)
 {
-	uint32_t t;
-	uint_least8_t i = 0;
-	uint_least8_t j = 3;
+	return ((x & 0x000000ff) << 24) |
+		((x & 0x0000ff00) << 8) |
+		((x & 0x00ff0000) >> 8) |
+		((x & 0xff000000) >> 24);
+}
+
+/*
+ * reader() takes a file pointer and a head pointer to a singly linked list.
+ * reader() extends the singly linked list in place.
+ */
+
+void reader(FILE * fp, Block * b)
+{
 	uint64_t l = 0;
+	uint_least8_t i;
 
-	for (t = fgetc(fp); !feof(fp); t = fgetc(fp)) {
+	for (;;) {
+		l += fread(b->data, sizeof(uint8_t), 64, fp);
 
-		l += 8;	// count the number of bits
-
-		b->data[i] |= t << j * 8;
-
-		if (j == 0) {
-			i++;
-			j = 3;
-		} else {
-			j--;
+		for (i = 0; i < 16; i++) {
+			b->data[i] = flip_uint32_t(b->data[i]);
 		}
 
-		if (i > 15) {
-			i = 0;
+		/*
+		 * If the message fits precisely a block, a new block is
+		 * created and eof will be encountered in the next loop.
+		 * This guarantees 0x80 will be placed in the right place.
+		 */
+
+		if (feof(fp)) {
+			break;
+		} else {
 			b->next = calloc(1, sizeof(Block));
 			b = b->next;
 			b->next = NULL;
 		}
 	}
 
-	b->data[i] |= 0x80 << j * 8;	// mark the end of message.
+	b->data[l % 64 / 4] |= 0x80 << (4 - l % 4 - 1) * 8;
 
-	if (i > 13) {
+	// extend b if there are no room for for l.
+	if (l % 64 / 4 > 13) {
 		b->next = calloc(1, sizeof(Block));
 		b = b->next;
 		b->next = NULL;
 	}
+
+	l *= 8;
 
 	b->data[14] = (uint32_t) (l >> 32);
 
@@ -195,7 +207,7 @@ uint32_t s_4(uint32_t x)
 	return s(x, 17) ^ s(x, 19) ^ (x >> 10);
 }
 
-uint32_t * extend(Block *b)
+uint32_t *extend(Block * b)
 {
 	uint_least8_t i;
 
@@ -213,7 +225,7 @@ uint32_t * extend(Block *b)
 	return eb;
 }
 
-uint32_t * hash(Block *bl)
+uint32_t *hash(Block * bl)
 {
 	uint32_t a, b, c, d, e, f, g, h, t1, t2;
 	uint_least8_t i;
