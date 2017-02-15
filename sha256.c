@@ -122,7 +122,7 @@ uint32_t flip_uint32_t(uint32_t x)
  * reader() extends the singly linked list in place.
  */
 
-void reader(FILE * fp, Block * b)
+void reader(FILE *fp, Block *b)
 {
 	uint64_t l = 0;
 	uint_least8_t i;
@@ -207,7 +207,7 @@ uint32_t s_4(uint32_t x)
 	return s(x, 17) ^ s(x, 19) ^ (x >> 10);
 }
 
-uint32_t *extend(Block * b)
+uint32_t *extend(Block *b)
 {
 	uint_least8_t i;
 
@@ -225,7 +225,7 @@ uint32_t *extend(Block * b)
 	return eb;
 }
 
-uint32_t *hash(Block * bl)
+uint32_t *hash(Block *bl)
 {
 	uint32_t a, b, c, d, e, f, g, h, t1, t2;
 	uint_least8_t i;
