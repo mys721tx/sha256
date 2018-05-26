@@ -160,16 +160,13 @@ void reader(FILE *fp, Block *b)
 
 	l *= 8;
 
-	b->data[14] = (uint32_t) (l >> 32);
+	b->data[14] = (uint32_t)(l >> 32);
 
-	b->data[15] = (uint32_t) (l & 0xffffffff);
+	b->data[15] = (uint32_t)(l & 0xffffffff);
 }
 
 // Ch function defined in SHA-256 white paper
-uint32_t ch(uint32_t x, uint32_t y, uint32_t z)
-{
-	return (x & y) ^ (~x & z);
-}
+uint32_t ch(uint32_t x, uint32_t y, uint32_t z) { return (x & y) ^ (~x & z); }
 
 // Maj function defined in SHA-256 white paper
 uint32_t maj(uint32_t x, uint32_t y, uint32_t z)
@@ -177,35 +174,23 @@ uint32_t maj(uint32_t x, uint32_t y, uint32_t z)
 	return (x & y) ^ (x & z) ^ (y & z);
 }
 
-// right rotation 
+// right rotation
 uint32_t s(uint32_t x, uint_least8_t n)
 {
 	return x >> n | x << (8 * sizeof(uint32_t) - n);
 }
 
 // Sigma_0 function defined in SHA-256 white paper
-uint32_t s_0(uint32_t x)
-{
-	return s(x, 2) ^ s(x, 13) ^ s(x, 22);
-}
+uint32_t s_0(uint32_t x) { return s(x, 2) ^ s(x, 13) ^ s(x, 22); }
 
 // Sigma_1 function defined in SHA-256 white paper
-uint32_t s_1(uint32_t x)
-{
-	return s(x, 6) ^ s(x, 11) ^ s(x, 25);
-}
+uint32_t s_1(uint32_t x) { return s(x, 6) ^ s(x, 11) ^ s(x, 25); }
 
 // sigma_0 function defined in SHA-256 white paper
-uint32_t s_3(uint32_t x)
-{
-	return s(x, 7) ^ s(x, 18) ^ (x >> 3);
-}
+uint32_t s_3(uint32_t x) { return s(x, 7) ^ s(x, 18) ^ (x >> 3); }
 
 // sigma_1 function defined in SHA-256 white paper
-uint32_t s_4(uint32_t x)
-{
-	return s(x, 17) ^ s(x, 19) ^ (x >> 10);
-}
+uint32_t s_4(uint32_t x) { return s(x, 17) ^ s(x, 19) ^ (x >> 10); }
 
 uint32_t *extend(Block *b)
 {
@@ -306,9 +291,8 @@ int main(int argc, char *argv[])
 		fp = fopen(argv[i], "rb");
 
 		if (!fp) {
-			fprintf(stderr,
-				"Unable to open %s: %s\n",
-				argv[i], strerror(errno));
+			fprintf(stderr, "Unable to open %s: %s\n", argv[i],
+				strerror(errno));
 
 			return errno;
 		}
